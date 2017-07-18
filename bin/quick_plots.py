@@ -66,7 +66,7 @@ parser.add_option( "--fluxstorage",
 (options,args) = parser.parse_args()
 
 profile = np.loadtxt(options.profile)
-prof_mod = model_profile.makeProfileModel('fourier', profile, nharm=options.num_harmonics)
+prof_mod = model_profile.makeProfileModel('fourier', profile, n=options.num_harmonics)
 specparams = qlt.read_pulsar_spectrum_file(options.name)[0]#[name, NH, Gamma, kT]    
 freq = smu.read_parfile(options.parfile)['F0'].value
 
@@ -166,6 +166,7 @@ if options.list:
     ax5.axhline(2.5228, ls='dashed', color='r' , label='$3-\\sigma$') 
     ax5.legend(loc=2)
     plt.xlabel('Modified Julian Date')
-    plt.savefig('summary_'+options.name+'.png')        
+    plt.savefig('summary_'+options.name+'.png')
+    plt.show()        
 
         

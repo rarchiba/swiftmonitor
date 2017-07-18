@@ -158,8 +158,8 @@ class Gaussian_Model(Profile_Model):
         phase = profile.T[0] 
         self.nbins = len(phase)
         phase /= float(self.nbins)
-        print 'phase = ', phase
-        print 'nbins = ', self.nbins
+        #print 'phase = ', phase
+        #print 'nbins = ', self.nbins
         grand = profile.T[1]
         err = np.sqrt(grand)
 
@@ -200,8 +200,8 @@ class Gaussian_Model(Profile_Model):
             else:
                 self.ngauss -= 1
                     #print 'A, mu, sig, base (fit):     ', A, mu, sig, base
-            print 'base_guess = ', base_guess
-            print 'base type  = ', np.shape(base_guess)
+            #print 'base_guess = ', base_guess
+            #print 'base type  = ', np.shape(base_guess)
             profile_resid -= self.gaussian(phase, A_guess, mu_guess, 
                 sig_guess, prof_mean)
 
@@ -226,8 +226,8 @@ class Gaussian_Model(Profile_Model):
 
         # Roll back the fit profile model vi fit mean, using phases
         ### mu_fit -= float(n_roll_bins)/float(self.nbins)
-        print 'rolled_bins = ', mu_fit*self.nbins
-        print '   mu: ', mu_fit
+        #print 'rolled_bins = ', mu_fit*self.nbins
+        #print '   mu: ', mu_fit
 
 
         #n_fit_bins=1000
@@ -307,7 +307,7 @@ class Gaussian_Model(Profile_Model):
             print 'pcov = ', pcov
         ##print 'n_popt = ', len(popt)
         ngauss = (len(popt) - 1)/3
-        print 'ngauss = ', ngauss
+        #print 'ngauss = ', ngauss
 #        A = [np.zeros(ngauss, dtype=float)]
 #        mean = np.zeros_like(A)
 #        width = np.zeros_like(A)

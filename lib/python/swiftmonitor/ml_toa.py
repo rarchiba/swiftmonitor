@@ -269,7 +269,7 @@ def calc_toa_offset(phases, prof_mod, sim_err=False, no_err=False,
 def get_ml_toa(fits_fn, prof_mod, parfile, scope='swift', print_offs=None,
                frequency=None,fdot=None, epoch=None,  sim=False, bg_counts=0, Emin=None,
                Emax=None, gauss_err=False, tempo2=False, debug=False, split_n_days=None,
-               correct_pf=False, split_num=None, split_orbits=False,split_photons=False, writefile=False, bright=False):
+               correct_pf=False, split_num=None, split_orbits=False,split_photons=None, writefile=False, bright=False):
 
     print_timings = False # if want to print summary of runtime
     if split_n_days==None and split_photons==None:
@@ -324,12 +324,12 @@ def get_ml_toa(fits_fn, prof_mod, parfile, scope='swift', print_offs=None,
             
     elif split_photons:
         t=np.zeros(0)
-        fits_files = np.loadtxt(fits_fn, dtype='S')
         try:
+            fits_files = np.loadtxt(fits_fn, dtype='S')
             for fit in fits_files:
                 t = np.append(t, smu.fits2times(fit, scope=scope, Emin=Emin, Emax=Emax))
-        except (Exception):
-             t = np.append(t, smu.fits2times(fits_files.tostring(), scope=scope, Emin=Emin, Emax=Emax))        
+        except (ValueError):
+             t = np.append(t, smu.fits2times(fits_fn, scope=scope, Emin=Emin, Emax=Emax))        
         t.sort()
         n_toas = len(t)/split_photons
         if n_toas == 0:
