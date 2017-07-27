@@ -1,5 +1,6 @@
 import numpy as np
 import astropy.io.fits as pyfits
+from fluxtool import rms_estimator
 import sys
 
 
@@ -149,7 +150,7 @@ def energy2chan(E, scope='swift'):
     elif scope == 'fermi':
         chans = E*1000.
     elif scope == 'xte' or 'rxte':
-       xte_scale = np.loadtxt('/homes/borgii/rarchiba/swiftmonitor/XTE_ENERGY_CHANNEL_mod',
+       xte_scale = np.loadtxt('/home/rarchiba/Scripts/XTE_ENERGY_CHANNEL_mod',
                         usecols=[0, -1]).T
        keVtoxtechan = lambda x:np.interp(x, xte_scale[1], xte_scale[0])
        chans = keVtoxtechan(E)  
@@ -485,6 +486,32 @@ def h_test_obs(fits_fn, par_fn):
 
     return (H, M, fpp)
 
+def pulsed_flux_rms(fits_fn, par_fn,normed = True, nbins = 32, **kwargs):
+    '''Given a fitsfilename and a par file, will return the RMS pulsed flux (see appendix of https://arxiv.org/abs/1505.03570). If normed = True, will be in counts/ s, if False, will be in counts. 
+    '''
+    phases = fits2phase(fits_fn, par_fn, **kwargs)
+    bins, folded = fold_phases(phases,nbins=nbins)
+    rms_value, rms_uncertainty = rms_estimator(5)(folded,np.sqrt(folded))
+    rms_value*=nbins
+    rms_uncertainty*=nbins
+    if normed:
+        fits = pyfits.open(fits_fn)
+        exposure = fits[1].header['Exposure']
+        del fits
+        rms_value /= exposure
+        rms_uncertainty /= exposure
+    return rms_value, rms_uncertainty
+
+def pulsed_fraction_rms(fits_fn, par_fn,nbins = 32, **kwargs):
+    '''Given a fitsfilename and a par file, will return the RMS pulsed fraction (see appendix of https://arxiv.org/abs/1505.03570).
+    '''
+    phases = fits2phase(fits_fn, par_fn, **kwargs)
+    bins, folded = fold_phases(phases,nbins=nbins)
+    rms_value, rms_uncertainty = rms_estimator(5)(folded,np.sqrt(folded))
+    total_flux = np.mean(folded)
+    PF_RMS= rms_value/total_flux
+    PF_RMS_err = rms_uncertainty/total_flux
+    return PF_RMS, PF_RMS_err
 
 class SwiftMonError(Exception):
     """
