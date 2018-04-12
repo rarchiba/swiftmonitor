@@ -144,6 +144,8 @@ def energy2chan(E, scope='swift'):
     """
     if scope == 'swift':
         chans = E * 100.0
+    if scope == 'nicer':
+        chans = E * 100.0
     elif scope == 'nustar':
         chans = (E - 1.6) / 0.04
     elif scope == 'chandra':
