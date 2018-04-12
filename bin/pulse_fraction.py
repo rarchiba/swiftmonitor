@@ -16,6 +16,10 @@ parser.add_option("-n", "--nbins",
     dest="nbins", type='int',
     help="Number of bins to fold. Default is 16.",
     default=16)
+parser.add_option("--nharm",
+    dest="nharm", type='int',
+    help="Number of Harmonics. Default is 5.",
+    default=5)
 parser.add_option("--scope",
     dest="scope", type='string',
     help="Event files are from this telescope, default swift.",
@@ -41,13 +45,13 @@ if options.list:
     EVTs = np.loadtxt(options.list, dtype='S')#.T[0]
     phases = np.zeros(0)
     for evt in EVTs:     
-        pulsed_flux, pulsed_flux_err = smu.pulsed_flux_rms(evt, options.parfile,normed = options.normed, nbins = options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax)
-        p_frac, p_frac_err = smu.pulsed_fraction_rms(evt, options.parfile, nbins= options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax)
+        pulsed_flux, pulsed_flux_err = smu.pulsed_flux_rms(evt, options.parfile,normed = options.normed, nbins = options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax, nharm =options.nharm )
+        p_frac, p_frac_err = smu.pulsed_fraction_rms(evt, options.parfile, nbins= options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax, nharm =options.nharm)
         date = np.mean(smu.fits2times(evt,scope=options.scope, Emin=options.emin,Emax=options.emax))
         print evt, date , pulsed_flux, pulsed_flux_err, p_frac, p_frac_err 
         
 else:                      
-    pulsed_flux, pulsed_flux_err = smu.pulsed_flux_rms(args[0], options.parfile,normed = options.normed, nbins = options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax)
-    p_frac, p_frac_err = smu.pulsed_fraction_rms(args[0], options.parfile, nbins= options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax)
+    pulsed_flux, pulsed_flux_err = smu.pulsed_flux_rms(args[0], options.parfile,normed = options.normed, nbins = options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax, nharm =options.nharm)
+    p_frac, p_frac_err = smu.pulsed_fraction_rms(args[0], options.parfile, nbins= options.nbins, scope=options.scope, Emin=options.emin,Emax=options.emax, nharm =options.nharm)
     date = np.mean(smu.fits2times(args[0],scope=options.scope, Emin=options.emin,Emax=options.emax))
     print args[0], date , pulsed_flux, pulsed_flux_err, p_frac, p_frac_err 

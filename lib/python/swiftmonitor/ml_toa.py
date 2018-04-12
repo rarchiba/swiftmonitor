@@ -35,7 +35,7 @@ def calc_prob(phases, offset, prof_mod):
 
     loglike = np.sum( np.log(probs) )
     return loglike
-    
+
 def calc_prob_bright(folded, offset, prof_mod):
     """
     Calculates the probability of an offset given a profile model and a folded profile/bins.
@@ -44,7 +44,7 @@ def calc_prob_bright(folded, offset, prof_mod):
 
     loglike = np.sum(probs)
     return loglike
-    
+
 class PSRpar:
     """
     This class contains all the relevant information for
@@ -157,8 +157,8 @@ def sim_error(prof_mod,N_counts,phases,from_template=True, debug=False):
         median = np.median(sim_offsets)
         mad = np.median(np.abs(sim_offsets-median))
         plt.hist(sim_offsets)
-        print "Std dev offsets",np.std(sim_offsets)
-        print "MAD offsets",mad
+        print( "Std dev offsets",np.std(sim_offsets))
+        print( "MAD offsets",mad)
         plt.show()
 
     sys.stderr.write("Sim 100%% Complete \n")
@@ -233,7 +233,7 @@ def calc_toa_offset(phases, prof_mod, sim_err=False, no_err=False,
     for offset in offsets:
         if bright:
             prob = calc_prob_bright(folded, offset, prof_mod)
-        else:    
+        else:
             prob =  calc_prob(phases, offset, prof_mod)
         probs.append(prob)
     calcprobtime += time.time() - starttime
@@ -291,7 +291,7 @@ def get_ml_toa(fits_fn, prof_mod, parfile, scope='swift', print_offs=None,
         bg_fits_fn = fits_fn.replace('reg','bgreg')
         bg_fits = pyfits.open(bg_fits_fn)
         bg_counts = int(bg_fits[1].header['NAXIS2'] * bg_scale)
-        print 'BG Counts:',bg_counts
+        print('BG Counts:',bg_counts)
         bg_fits.close()
     if frequency and epoch:
         par = lambda: None
@@ -321,7 +321,7 @@ def get_ml_toa(fits_fn, prof_mod, parfile, scope='swift', print_offs=None,
             ts = np.split(t[:-remainder],split_num)
         else:
             ts = np.split(t,split_num)
-            
+
     elif split_photons:
         t=np.zeros(0)
         try:
@@ -329,12 +329,12 @@ def get_ml_toa(fits_fn, prof_mod, parfile, scope='swift', print_offs=None,
             for fit in fits_files:
                 t = np.append(t, smu.fits2times(fit, scope=scope, Emin=Emin, Emax=Emax))
         except (ValueError):
-             t = np.append(t, smu.fits2times(fits_fn, scope=scope, Emin=Emin, Emax=Emax))        
+             t = np.append(t, smu.fits2times(fits_fn, scope=scope, Emin=Emin, Emax=Emax))
         t.sort()
         n_toas = len(t)/split_photons
         if n_toas == 0:
            ts = np.split(t,1)
-        else:    
+        else:
             remainder = len(t) % n_toas
             if remainder:
                 sys.stderr.write("Warning: Number of events in %s not divisable by %d. " \
@@ -350,7 +350,7 @@ def get_ml_toa(fits_fn, prof_mod, parfile, scope='swift', print_offs=None,
             for fit in fits_files:
                 t = np.append(t, smu.fits2times(fit, scope=scope, Emin=Emin, Emax=Emax))
         except (Exception):
-             t = np.append(t, smu.fits2times(fits_files.tostring(), scope=scope, Emin=Emin, Emax=Emax))        
+             t = np.append(t, smu.fits2times(fits_files.tostring(), scope=scope, Emin=Emin, Emax=Emax))
         t.sort()
         dt=t[1:]-t[:-1]
         splits = np.where(dt>0.0116)[0] # 1 ks in days 0.0116

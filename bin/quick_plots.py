@@ -112,10 +112,10 @@ if options.list:
                       correct_pf=options.correct_pf, writefile=obs+'/'+options.writefile)
              except (Exception):
                 print('MANUALLY CHECK TOA', obs)
-        BPs=glob.glob(obs+'/32nd_s.burst') 
+        BPs=glob.glob(obs+'/100ms.burst') 
         if len(BPs)==0:  
              try:      
-                os.system('python ~/Scripts/swburst_find.py -b 0.03125 -o '+obs+'/32nd_s.burst ' +fits_fn )
+                os.system('python ~/Scripts/swburst_find.py --Emin 35 -b 0.1 -o '+obs+'/100ms.burst ' +fits_fn )
              except (Exception):
                 print('MANUALLY CHECK BURST ', obs)           
         else:      
@@ -126,7 +126,7 @@ if options.list:
                 toa_err=rawtoa[0].error/1E6
                 
                 F, Flo, Fhi= np.loadtxt(obs+'/'+options.fluxstorage+'.spec', usecols=(1,2,3))*1E11
-                BM=np.loadtxt(obs+'/32nd_s.burst').T
+                BM=np.loadtxt(obs+'/100ms.burst').T
                 ax1=plt.subplot(511)
                 plt.errorbar(toa, F, yerr=[(F-Flo, Fhi-F)],fmt='ko' )
               
@@ -148,9 +148,13 @@ if options.list:
                 ax5=plt.subplot(515,sharex=ax1)
                 if len(BM)!=0 :
                     if len(np.shape(BM))==1:
-                        plt.errorbar(toa, -np.log10(BM[2]), fmt='ko' )
+                        t, cnts, P_fa, avg_pi,mjd,  mode_frac = BM
+                        filt = np.where((mode_frac<0.51)*(avg_pi>70))
+                        plt.errorbar(mjd[filt], -np.log10(P_fa[filt]), fmt='ko' )
                     else:
-                        plt.errorbar(np.tile(toa, len(BM[2])), -np.log10(BM[2]), fmt='ko' )
+                        t, cnts, P_fa, avg_pi,mjd,  mode_frac = BM
+                        filt = np.where((mode_frac<0.51)*(avg_pi>70))
+                        plt.errorbar(mjd[filt], -np.log10(P_fa[filt]), fmt='ko' )
                     plt.ylabel('Burst Occurance\n [1 in 10$^{X}$]')
                 
             except (Exception):
@@ -166,7 +170,7 @@ if options.list:
     ax5.axhline(2.5228, ls='dashed', color='r' , label='$3-\\sigma$') 
     ax5.legend(loc=2)
     plt.xlabel('Modified Julian Date')
-    plt.savefig('summary_'+options.name+'.png')
+    #plt.savefig('summary_'+options.name+'.png')
     plt.show()        
 
         

@@ -13,8 +13,8 @@ class rms_estimator(estimator):
     """RMS estimator of pulsed flux
 
     Estimate the pulsed flux in a pulse profile by smoothing it to a
-    specified number of harmonics, then compute the RMS amplitude. 
-    
+    specified number of harmonics, then compute the RMS amplitude.
+
     The normalization is chosen so that if smoothing is not a factor,
     the value returned is sqrt(mean(histogram**2)).
     """
@@ -22,25 +22,25 @@ class rms_estimator(estimator):
         estimator.__init__(self)
         self.name = "RMS estimator with %d harmonics" % n
         if n<1:
-            raise ValueError, "Must include at least one harmonic"
+            raise (ValueError, "Must include at least one harmonic")
         self.n = n
         self.RMS = True
 
     def __call__(self, histogram, uncertainties):
 
         if len(uncertainties)!=len(histogram):
-            raise ValueError, "Uncertainties must be an array the same size as histogram"
+            raise (ValueError, "Uncertainties must be an array the same size as histogram")
 
         ft = rfft(histogram)
 
         # the variance on the real or imaginary part of a Fourier component
         # the 0th, and if n is even, the last, bin have zero imaginary part
         # so their variances are twice this.
-        ft_variance_normal = sum(uncertainties**2)/2. 
-        
+        ft_variance_normal = sum(uncertainties**2)/2.
+
         if self.n>=len(ft)-1:
-            raise ValueError, "%d harmonics requested but only %d exist; this combination is not yet implemented" % (self.n, len(ft)-1)
-        
+            raise (ValueError, "%d harmonics requested but only %d exist; this combination is not yet implemented" % (self.n, len(ft)-1))
+
         #power_estimate = sum(abs(ft[1:self.n+1])**2)
         power_estimate = max(sum(abs(ft[1:self.n+1])**2) - 2*self.n*ft_variance_normal,0)
         variance_estimate = ft_variance_normal
@@ -84,7 +84,7 @@ def sum_u(values, uncertainties):
     values = asarray(values,dtype=float).ravel()
     uncertainties = asarray(uncertainties,dtype=float).ravel()
     if shape(values)!=shape(uncertainties):
-        raise ValueError, "All arrays must be the same size"
+        raise (ValueError, "All arrays must be the same size")
 
     return (sum(values),
             sqrt(dot(uncertainties,uncertainties)))
@@ -94,7 +94,7 @@ def average(values, uncertainties, weights=None):
 
     Returns the average and its uncertainty.
 
-    If weights are not specified, they are chosen so as to minimize 
+    If weights are not specified, they are chosen so as to minimize
     the resulting uncertainty.
 
     """
@@ -105,14 +105,14 @@ def average(values, uncertainties, weights=None):
     else:
         weights = asarray(weights,dtype=float).ravel()
     if shape(values)!=shape(uncertainties) or shape(values)!=shape(weights):
-        raise ValueError, "All arrays must be the same size"
+        raise (ValueError, "All arrays must be the same size")
 
     return (dot(values,weights)/sum(weights),
             sqrt(dot(uncertainties**2,weights**2))/sum(weights))
 
 class minimum_estimator(estimator):
-    def __init__(self, template=None, off_pulse_bins=None, 
-                       off_pulse_auto_margin=0., 
+    def __init__(self, template=None, off_pulse_bins=None,
+                       off_pulse_auto_margin=0.,
                        correlation_harmonics=None):
 
         self.template = template
@@ -136,8 +136,8 @@ class minimum_estimator(estimator):
         else:
             self.off_pulse_bins = list(off_pulse_bins)
             if not self.off_pulse_bins:
-                raise ValueError, "No off-pulse bins specified!"
-        self.correlation_harmonics = correlation_harmonics 
+                raise (ValueError, "No off-pulse bins specified!")
+        self.correlation_harmonics = correlation_harmonics
 
     def __call__(self, histogram, uncertainties):
         if self.template is not None:
@@ -162,7 +162,7 @@ class minimum_estimator(estimator):
         weights = zeros(len(hist2))
         for b in off_pulse_bins:
             if not 0<=b<temp_len:
-                raise ValueError, "Invalid off-pulse bin %d" % b
+                raise (ValueError, "Invalid off-pulse bin %d" % b)
             l = b/float(temp_len) - shift
             r = (b+1)/float(temp_len) - shift
 
@@ -199,12 +199,12 @@ class minimum_estimator(estimator):
         u2 = concatenate((uncertainties,uncertainties))
         min, u_min = average(hist2,u2,weights)
         avg, u_avg = average(histogram,uncertainties,ones(len(histogram)))
-        
+
         return avg-min, sqrt(u_min**2+u_avg**2)
 
 class smoothed_minimum_estimator(minimum_estimator):
-    def __init__(self, template=None, off_pulse_bins=None, 
-                       off_pulse_auto_margin=0., 
+    def __init__(self, template=None, off_pulse_bins=None,
+                       off_pulse_auto_margin=0.,
                        harmonics=5,
                        upsample=64):
 
@@ -228,7 +228,7 @@ class smoothed_minimum_estimator(minimum_estimator):
         else:
             self.off_pulse_bins = list(off_pulse_bins)
             if not self.off_pulse_bins:
-                raise ValueError, "No off-pulse bins specified!"
+                raise (ValueError, "No off-pulse bins specified!")
 
         if template is not None:
             self.off_pulse_ranges = self.compute_off_pulse_ranges(template,len(template))
@@ -246,15 +246,15 @@ class smoothed_minimum_estimator(minimum_estimator):
             if peak:
                 histogram = -histogram
             off_pulse_bins = list(where(
-                    histogram-amin(histogram) <= 
+                    histogram-amin(histogram) <=
                        self.off_pulse_auto_margin*(amax(histogram)-amin(histogram))
                     )[0])
         #if [a for a in off_pulse_bins if a>=n]:
         #    raise ValueError, "Specified bins '%s' include some larger than %d" % (off_pulse_bins, n)
         return [(b/n,(b+1)/n) for b in off_pulse_bins]
-        
+
     def evaluate(self, ft, ft_variance_normal, lh, ranges):
-        
+
         # this weird voodoo allows us to calculate not only the integral
         # of the smoothed function over the off-pulse interval but error
         # bars on the result you get.
@@ -271,7 +271,7 @@ class smoothed_minimum_estimator(minimum_estimator):
         normalization = 2./lh
         min = normalization*dot(ft[1:self.harmonics+1],exponential_integral).real/width
         u_min = normalization*sqrt(sum(ft_variance_normal*abs(exponential_integral)**2))/width
-        
+
         return min, u_min
 
     def find_shift(self, histogram):
@@ -287,11 +287,11 @@ class smoothed_minimum_estimator(minimum_estimator):
 
         ft = rfft(histogram)
         ft[self.harmonics+1:]*=0.
-        ft_variance_normal = sum(uncertainties**2)/2. 
+        ft_variance_normal = sum(uncertainties**2)/2.
 
         if self.off_pulse_ranges is not None:
             off_pulse_ranges = [(l-shift, r-shift) for (l,r) in self.off_pulse_ranges]
-        else: 
+        else:
             off_pulse_ranges = self.compute_off_pulse_ranges(irfft(ft,self.harmonics*16),len(histogram))
 
         min, u_min = self.evaluate(ft,ft_variance_normal,len(histogram),off_pulse_ranges)
@@ -304,7 +304,7 @@ class smoothed_minimum_estimator(minimum_estimator):
 class peak_to_peak_estimator(smoothed_minimum_estimator):
 
     def __init__(self, template=None, off_pulse_bins=None, peak_bins=None,
-                       off_pulse_auto_margin=0., 
+                       off_pulse_auto_margin=0.,
                        harmonics=5,
                        upsample=64):
 
@@ -325,20 +325,20 @@ class peak_to_peak_estimator(smoothed_minimum_estimator):
 
         if off_pulse_bins is None:
             if peak_bins is not None:
-                raise ValueError, "Peak bins specified but off-pulse bins not specified!"
+                raise (ValueError, "Peak bins specified but off-pulse bins not specified!")
             self.off_pulse_bins = None
         else:
             self.off_pulse_bins = list(off_pulse_bins)
             if not self.off_pulse_bins:
-                raise ValueError, "No off-pulse bins specified!"
+                raise (ValueError, "No off-pulse bins specified!")
         if peak_bins is None:
             if off_pulse_bins is not None:
-                raise ValueError, "Off-pulse bins specified but peak bins not specified!"
+                raise (ValueError, "Off-pulse bins specified but peak bins not specified!")
             self.peak_bins = None
         else:
             self.peak_bins = list(peak_bins)
             if not self.peak_bins:
-                raise ValueError, "No peak bins specified!"
+                raise (ValueError, "No peak bins specified!")
 
         if template is not None:
             self.off_pulse_ranges = self.compute_off_pulse_ranges(template,len(template))
@@ -353,14 +353,14 @@ class peak_to_peak_estimator(smoothed_minimum_estimator):
 
         ft = rfft(histogram)
         ft[self.harmonics+1:]*=0.
-        ft_variance_normal = sum(uncertainties**2)/2. 
+        ft_variance_normal = sum(uncertainties**2)/2.
 
 
         if self.off_pulse_ranges is None:
             off_pulse_ranges = self.compute_off_pulse_ranges(irfft(ft,self.harmonics*16),len(histogram))
         else:
             off_pulse_ranges = [(l-shift, r-shift) for (l,r) in self.off_pulse_ranges]
-        
+
         if self.peak_ranges is None:
             peak_ranges = self.compute_off_pulse_ranges(irfft(ft,self.harmonics*16),len(histogram),peak=True)
         else:
@@ -380,9 +380,9 @@ if __name__=='__main__':
     from optparse import OptionParser
     import scipy.io
     parser = OptionParser("Usage: %prog [options] input_profile", version="%prog 1.0")
-    parser.add_option("-n", "--harmonics", 
+    parser.add_option("-n", "--harmonics",
                       dest="harmonics", type="int", default=5,
-                      help="Smooth to N harmonics (default %default)", 
+                      help="Smooth to N harmonics (default %default)",
                       metavar="N")
     parser.add_option("-t", "--template",
                       dest="template",
@@ -397,13 +397,13 @@ if __name__=='__main__':
                       help="Treat the lowest bin(s) of the template as off-pulse time")
     parser.add_option("-A", "--automatic-off-pulse-threshold",
                       dest="auto_off_pulse_threshold", type="float", default=0,
-                      help="Treat as off-pulse bins any bin in the template that is within T*(max-min) of the minimum bin (default %default)", 
+                      help="Treat as off-pulse bins any bin in the template that is within T*(max-min) of the minimum bin (default %default)",
                       metavar="T")
-    parser.add_option("-N", "--no-smooth-minimum", 
+    parser.add_option("-N", "--no-smooth-minimum",
                       action="store_false", dest="smooth",
                       help="Turn off profile smoothing",
                       default=True)
-    parser.add_option("-T", "--two-cycles", 
+    parser.add_option("-T", "--two-cycles",
                       action="store_true", dest="twocycles",
                       help="Input file contains two cycles",
                       default=False)
@@ -412,7 +412,7 @@ if __name__=='__main__':
 
     if len(args)!=1:
         parser.error("Exactly one positional argument required")
-                      
+
     infile, = args
 
     if infile=="-":
@@ -432,7 +432,7 @@ if __name__=='__main__':
     if not options.twocycles:
         histogram = profile[:,1]
         uncertainties = profile[:,2]
-        if (len(histogram)%2==0 and 
+        if (len(histogram)%2==0 and
             all(histogram[:len(histogram)//2]==
                    histogram[len(histogram)//2:])):
             sys.stderr.write("Warning: profile appears to contain two cycles\n")
@@ -444,16 +444,16 @@ if __name__=='__main__':
         if not all(histogram[:len(histogram)//2]==
                    histogram[len(histogram)//2:]):
             sys.stderr.write("Warning: profile does not appear to contain two cycles\n")
-        uncertainties = uncertainties[:len(histogram)//2]    
-        histogram = histogram[:len(histogram)//2]    
+        uncertainties = uncertainties[:len(histogram)//2]
+        histogram = histogram[:len(histogram)//2]
 
 
     total_flux = mean(histogram)
 
     rms_value, rms_uncertainty = rms_estimator(options.harmonics)(histogram, uncertainties)
 
-    print "RMS pulsed flux:            \t%#0.7g\t+/-\t%#0.7g" % (rms_value, rms_uncertainty)
-    print "RMS pulsed fraction:        \t%#0.7g\t+/-\t%#0.7g" % (rms_value/total_flux, rms_uncertainty/total_flux)
+    print ("RMS pulsed flux:            \t%#0.7g\t+/-\t%#0.7g" % (rms_value, rms_uncertainty))
+    print ("RMS pulsed fraction:        \t%#0.7g\t+/-\t%#0.7g" % (rms_value/total_flux, rms_uncertainty/total_flux))
 
     compute_area = False
     if options.template is not None:
@@ -471,18 +471,18 @@ if __name__=='__main__':
 
         t_value, t_uncertainty = rms_estimator(options.harmonics)(template, zeros(len(template)))
         scal = mean(template-amin(template))/t_value
-        print "RMS to area scaling factor: \t\t%#0.7g" % scal
-        print "Scaled RMS pulsed flux:     \t%#0.7g\t+/-\t%#0.7g" % (rms_value*scal, rms_uncertainty*scal)
-        print "Scaled RMS pulsed fraction: \t%#0.7g\t+/-\t%#0.7g" % (rms_value*scal/total_flux, rms_uncertainty*scal/total_flux)
+        print ("RMS to area scaling factor: \t\t%#0.7g" % scal)
+        print ("Scaled RMS pulsed flux:     \t%#0.7g\t+/-\t%#0.7g" % (rms_value*scal, rms_uncertainty*scal))
+        print ("Scaled RMS pulsed fraction: \t%#0.7g\t+/-\t%#0.7g" % (rms_value*scal/total_flux, rms_uncertainty*scal/total_flux))
 
-        
+
     else:
         template = None
-    
+
     off_pulse_bins = None
     off_pulse_threshold = None
 
-    if options.off_pulse_bins is not None: 
+    if options.off_pulse_bins is not None:
         compute_area = True
         def convert_bins(s):
             if "-" in s:
@@ -501,7 +501,7 @@ if __name__=='__main__':
         parser.error("No method specified to choose off-pulse bins, please use either --off-pulse-bins or --automatic-off-pulse")
         compute_area = False
 
-    if compute_area:    
+    if compute_area:
         if options.smooth:
             E = smoothed_minimum_estimator(template,
                                            off_pulse_bins,
@@ -513,5 +513,5 @@ if __name__=='__main__':
                                   off_pulse_threshold,
                                   None)
         (v, u) = E(histogram, uncertainties)
-        print "Area pulsed flux:           \t%#0.7g\t+/-\t%#0.7g" % (v,u)
-        print "Area pulsed fraction:       \t%#0.7g\t+/-\t%#0.7g" % (v/total_flux,u/total_flux)
+        print ("Area pulsed flux:           \t%#0.7g\t+/-\t%#0.7g" % (v,u))
+        print ("Area pulsed fraction:       \t%#0.7g\t+/-\t%#0.7g" % (v/total_flux,u/total_flux))
