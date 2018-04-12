@@ -1,13 +1,10 @@
 import os, sys, time, shutil
 import astropy.io.fits as pyfits
-<<<<<<< HEAD
 from fluxtool import rms_estimator
 import sys
-=======
 import numpy as np
 import subprocess
 import re
->>>>>>> a729378556968bd1c122a10e2dbe8be85af326c5
 
 
 SECPERDAY=86400.0
@@ -60,7 +57,7 @@ def write_tempo2_toa(toa_MJDi, toa_MJDf, toaerr, freq, dm, obs='@', name='unk', 
         text_file.write("%s %f %s %.2f %s %s\n" % (name,freq,toa,toaerr,obs,flags))
         text_file.close()
     else:
-        print "%s %f %s %.2f %s %s" % (name,freq,toa,toaerr,obs,flags)
+        print ("%s %f %s %.2f %s %s" % (name,freq,toa,toaerr,obs,flags))
 
 def write_princeton_toa(toa_MJDi, toa_MJDf, toaerr, freq, dm, obs='@', name=' '*13):
     """
@@ -78,11 +75,11 @@ def write_princeton_toa(toa_MJDi, toa_MJDf, toaerr, freq, dm, obs='@', name=' '*
     # Splice together the fractional and integer MJDs
     toa = "%5d"%int(toa_MJDi) + ("%.13f"%toa_MJDf)[1:]
     if dm!=0.0:
-        print obs+" %13s %8.3f %s %8.2f              %9.4f" % \
-              (name, freq, toa, toaerr, dm)
+        print (obs+" %13s %8.3f %s %8.2f              %9.4f" % \
+              (name, freq, toa, toaerr, dm))
     else:
-        print obs+" %13s %8.3f %s %8.2f" % \
-              (name, freq, toa, toaerr)
+        print (obs+" %13s %8.3f %s %8.2f" % \
+              (name, freq, toa, toaerr))
 
 def calc_phs(MJD, refMJD, *args):
     """
@@ -150,16 +147,16 @@ def energy2chan(E, scope='swift'):
     elif scope == 'nustar':
         chans = (E - 1.6) / 0.04
     elif scope == 'chandra':
-        chans = (E/0.0146) + 1    
+        chans = (E/0.0146) + 1
     elif scope == 'xmm':
-        chans = E*1000.   
+        chans = E*1000.
     elif scope == 'fermi':
         chans = E*1000.
     elif scope == 'xte' or 'rxte':
        xte_scale = np.loadtxt('/home/rarchiba/Scripts/XTE_ENERGY_CHANNEL_mod',
                         usecols=[0, -1]).T
        keVtoxtechan = lambda x:np.interp(x, xte_scale[1], xte_scale[0])
-       chans = keVtoxtechan(E)  
+       chans = keVtoxtechan(E)
     else:
         sys.stderr.write('Warning: scope not found, assuming channels!\n')
         chans = E
@@ -178,14 +175,14 @@ def fits2times(evtname,scope='swift',Emin=None, Emax=None, give_t_E=False, aware
     """
     fits = pyfits.open(evtname)
     if scope =='fermi':
-        t = fits[1].data['bary_time'] 
-    else:       
+        t = fits[1].data['bary_time']
+    else:
         t = fits[1].data['time']
         t = t
     t = t / 86400.0
 
     try:
-        t = t + fits[1].header['MJDREFI'] + fits[1].header['MJDREFF']
+        t = t + fits[1].header['MJDREFI'] + fits[1].header['MJDREFF'] +fits[1].header['TIMEZERO']/3600./24.
 
     except (KeyError):
         t = t + fits[1].header['MJDREF']
@@ -193,11 +190,11 @@ def fits2times(evtname,scope='swift',Emin=None, Emax=None, give_t_E=False, aware
     if "PI" in fits[1].columns.names:
       Echans = fits[1].data['PI']
     elif "pi" in fits[1].columns.names:
-      Echans = fits[1].data['pi']  
+      Echans = fits[1].data['pi']
     elif "PHA" in fits[1].columns.names:
       Echans = fits[1].data['PHA']
     elif "ENERGY" in fits[1].columns.names:
-      Echans = fits[1].data['ENERGY'] 
+      Echans = fits[1].data['ENERGY']
     else:
         sys.stderr.write('No Energy Column\n')
         Emin, Emax = None, None
@@ -305,7 +302,7 @@ def times2phases(t, par_fn):
 
     phases = calc_phs(*phs_args)
     return phases
-    
+
 def times2freqs(t, par_fn, nuder=0):
     """Given an array of times and a parfile, this will read the reference epoch
        and frequency parameters, and convert into phafrequencies at those epochs
@@ -319,7 +316,7 @@ def times2freqs(t, par_fn, nuder=0):
     """
     par = read_parfile(par_fn)
 
-    phs_args = [ t, par['PEPOCH'].value] 
+    phs_args = [ t, par['PEPOCH'].value]
 
     for i in range(nuder, 12):
         fdot_name = 'F' + str(i)
@@ -329,7 +326,7 @@ def times2freqs(t, par_fn, nuder=0):
             phs_args.append(0.0)
 
     freqs = calc_freq(*phs_args)
-    return freqs    
+    return freqs
 
 def events_from_binned_profile(profile):
     binsize = 1.0 / len(profile)
@@ -492,13 +489,12 @@ def h_test_obs(fits_fn, par_fn):
 
     return (H, M, fpp)
 
-<<<<<<< HEAD
-def pulsed_flux_rms(fits_fn, par_fn,normed = True, nbins = 32, **kwargs):
-    '''Given a fitsfilename and a par file, will return the RMS pulsed flux (see appendix of https://arxiv.org/abs/1505.03570). If normed = True, will be in counts/ s, if False, will be in counts. 
+def pulsed_flux_rms(fits_fn, par_fn,normed = True, nbins = 32,nharm = 5,  **kwargs):
+    '''Given a fitsfilename and a par file, will return the RMS pulsed flux (see appendix of https://arxiv.org/abs/1505.03570). If normed = True, will be in counts/ s, if False, will be in counts.
     '''
     phases = fits2phase(fits_fn, par_fn, **kwargs)
     bins, folded = fold_phases(phases,nbins=nbins)
-    rms_value, rms_uncertainty = rms_estimator(5)(folded,np.sqrt(folded))
+    rms_value, rms_uncertainty = rms_estimator(nharm)(folded,np.sqrt(folded))
     rms_value*=nbins
     rms_uncertainty*=nbins
     if normed:
@@ -509,27 +505,28 @@ def pulsed_flux_rms(fits_fn, par_fn,normed = True, nbins = 32, **kwargs):
         rms_uncertainty /= exposure
     return rms_value, rms_uncertainty
 
-def pulsed_fraction_rms(fits_fn, par_fn,nbins = 32, **kwargs):
+def pulsed_fraction_rms(fits_fn, par_fn,nbins = 32,nharm = 5, **kwargs):
     '''Given a fitsfilename and a par file, will return the RMS pulsed fraction (see appendix of https://arxiv.org/abs/1505.03570).
     '''
     phases = fits2phase(fits_fn, par_fn, **kwargs)
     bins, folded = fold_phases(phases,nbins=nbins)
-    rms_value, rms_uncertainty = rms_estimator(5)(folded,np.sqrt(folded))
+    rms_value, rms_uncertainty = rms_estimator(nharm)(folded,np.sqrt(folded))
     total_flux = np.mean(folded)
     PF_RMS= rms_value/total_flux
     PF_RMS_err = rms_uncertainty/total_flux
     return PF_RMS, PF_RMS_err
-=======
-def execute_cmd(cmd, stdout=sys.stdout, stderr=sys.stderr): 
+
+
+def execute_cmd(cmd, stdout=sys.stdout, stderr=sys.stderr):
     """
     Execute the command 'cmd' after logging the command
-      to STDOUT.  
+      to STDOUT.
 
-      stderr and stdout can be sys.stdout/stderr or any file 
+      stderr and stdout can be sys.stdout/stderr or any file
       object to log output to file.
 
       stdout and stderr are returned if subprocess.PIPE is
-      provided for their input parameters. Otherwise will 
+      provided for their input parameters. Otherwise will
       return None.
     """
     sys.stdout.write("\n'"+cmd+"'\n")
@@ -557,62 +554,62 @@ class region:
     Class containing info from a region file.
       shape(loc[0],loc[1],dim[0],dim[1],...)
     """
-    
+
     def __init__(self, shape, dimensions, location, coords='physical'):
-    
+
         self.dim = dimensions
-        self.shape = shape 
+        self.shape = shape
         self.loc = location
         self.coords = coords
         self.region_str = self.get_region_str()
 
     def get_region_str(self):
-    
+
         # TODO: add other shapes and assert that shape is available
-        
+
         if self.coords.startswith('physical'):
-        
+
             if self.shape is 'circle':
-            
+
                 region_str = 'circle(%s,%s,%d)' % (self.loc[0], self.loc[1], self.dim[0])
-                
+
             if self.shape is 'annulus':
-            
+
                 region_str = 'annulus(%s,%s,%d,%d)' % (self.loc[0], self.loc[1], self.dim[0], self.dim[1])
-                
+
         #Currently commented out the degrees version of fk5
-        
+
         #if self.coords.startswith('fk5'):
         #    if self.shape is 'circle':
         #        region_str = 'circle(%s,%s,%d\")' % (self.loc[0], self.loc[1], self.dim[0])
         #    if self.shape is 'annulus':
         #        region_str = 'annulus(%s,%s,%d\",%d\")' % (self.loc[0], self.loc[1], self.dim[0], self.dim[1])
-        
+
         #Sexagesimal fk5:
-        
+
         if self.coords.startswith('fk5'):
             ra = self.loc[0]
             dec = self.loc[1]
-            
+
             ra_h = ra*24/360
             ra_h_int = int(ra_h)
             ra_m = int((ra_h - ra_h_int)*60)
             ra_s = (ra_h - ra_h_int - ra_m/60.)*3600
-            
+
             dec_h_int = int(dec)
             dec_m = abs(int((dec-dec_h_int)*60))
             dec_s = abs((dec - dec_h_int - np.sign(dec)*dec_m/60.)*3600)
-            
+
             if self.shape is 'circle':
-                
+
                 region_str = 'circle(%s:%s:%s,%s:%s:%s,%d\")' % (ra_h_int,ra_m,ra_s,
                              dec_h_int,dec_m,dec_s,self.dim[0])
-                
+
             if self.shape is 'annulus':
-            
+
                 region_str = 'annulus(%s:%s:%s,%s:%s:%s,%d\",%d\")' % (ra_h_int,ra_m,ra_s,
                              dec_h_int,dec_m,dec_s,self.dim[0],self.dim[1])
-                
+
         return region_str
 
     def write(self,output_fn):
@@ -623,10 +620,9 @@ class region:
         region += self.region_str
         f.write(region)
         f.close()
-    
+
     def __str__(self):
         return self.shape + ":\nDimension: " + str(self.dim) + "\nLocation: " + str(self.loc)
->>>>>>> a729378556968bd1c122a10e2dbe8be85af326c5
 
 class SwiftMonError(Exception):
     """
